@@ -2,7 +2,8 @@ import React from "react";
 import HeroSection from "@/components/HeroSection";
 import AboutSection from "@/components/AboutSection";
 import ServicesSection from "@/components/ServicesSection";
-import WhyChooseUsSection from "@/components/WhyChooseUsSection";
+import BeforeAfterShowcase from "@/components/BeforeAfterShowcase";
+import BentoGridSection from "@/components/BentoGridSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import EstimateCalculator from "@/components/EstimateCalculator";
 import ChecklistSection from "@/components/ChecklistSection";
@@ -22,11 +23,14 @@ export default function HomePage() {
       {/* Cleaning Services Grid */}
       <ServicesSection />
 
+      {/* Interactive Room-by-Room Clean Transformation Showcase */}
+      <BeforeAfterShowcase />
+
       {/* Interactive Scope & Duration Estimator */}
       <EstimateCalculator />
 
-      {/* Why Choose Us */}
-      <WhyChooseUsSection />
+      {/* Modern Bento Grid: Why Choose Us (Women-Owned, 24 Hours, Detailed, Customer-Focused) */}
+      <BentoGridSection />
 
       {/* How It Works (4 Steps) */}
       <HowItWorksSection />
@@ -41,7 +45,7 @@ export default function HomePage() {
       <LocationSection />
 
       {/* Contact / Booking Section */}
-      <section className="py-16 lg:py-24 bg-gradient-to-b from-surface-subtle to-mint/30">
+      <section className="py-20 lg:py-28 bg-gradient-to-b from-surface-subtle via-mint/20 to-surface-subtle border-t border-surface-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <EnquiryForm />
         </div>

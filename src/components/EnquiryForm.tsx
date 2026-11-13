@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import confetti from "canvas-confetti";
 import { 
   Send, 
   CheckCircle2, 
@@ -12,7 +13,8 @@ import {
   AlertCircle,
   Copy,
   Printer,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck
 } from "lucide-react";
 import { SERVICES, SERVICE_AREAS, BUSINESS_INFO } from "@/data/businessData";
 
@@ -41,6 +43,7 @@ export default function EnquiryForm({
     additionalRequirements: "",
   });
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState<any>(null);
@@ -66,7 +69,7 @@ export default function EnquiryForm({
     if (!cleanMobile) {
       errs.mobileNumber = "Mobile number is required";
     } else if (cleanMobile.length !== 10) {
-      errs.mobileNumber = "Please enter a valid 10-digit Indian mobile number";
+      errs.mobileNumber = "Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)";
     }
 
     if (!formData.serviceRequired) {
@@ -81,6 +84,11 @@ export default function EnquiryForm({
     return Object.keys(errs).length === 0;
   };
 
+  const handleBlur = (field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    validate();
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -91,8 +99,28 @@ export default function EnquiryForm({
     }
   };
 
+  const triggerConfetti = () => {
+    try {
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#087F5B", "#DDF7EA", "#F5C95D", "#065A40"],
+      });
+    } catch (e) {
+      // safe fallback if canvas is unavailable
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setTouched({
+      fullName: true,
+      mobileNumber: true,
+      serviceRequired: true,
+      locationArea: true,
+    });
 
     if (!validate()) {
       return;
@@ -113,6 +141,7 @@ export default function EnquiryForm({
 
       if (response.ok && data.success) {
         setSubmissionSuccess(data);
+        triggerConfetti();
 
         // Store enquiry in localStorage for client record
         try {
@@ -134,7 +163,7 @@ export default function EnquiryForm({
       }
     } catch (err) {
       setErrors({
-        form: "Unable to submit enquiry right now. Please check your internet connection.",
+        form: "Unable to submit enquiry right now. Please check your connection.",
       });
     } finally {
       setIsSubmitting(false);
@@ -160,51 +189,51 @@ export default function EnquiryForm({
       locationArea: "Bellandur (Near Mantri Espana)",
       additionalRequirements: "",
     });
+    setTouched({});
     setErrors({});
   };
 
   return (
     <div id="booking" className={`w-full ${className}`}>
       {submissionSuccess ? (
-        <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-premium border-2 border-mint animate-in fade-in zoom-in-95 duration-300">
+        <div className="bg-white rounded-[32px] p-8 sm:p-12 shadow-premium-hover border-2 border-mint animate-in fade-in zoom-in-95 duration-300">
           <div className="text-center max-w-lg mx-auto">
-            <div className="w-16 h-16 bg-mint text-primary rounded-full flex items-center justify-center mx-auto mb-5 shadow-sm">
-              <CheckCircle2 className="w-10 h-10 text-primary" />
+            <div className="w-20 h-20 bg-gradient-to-tr from-mint to-emerald-100 text-primary rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-md border border-mint-border">
+              <CheckCircle2 className="w-12 h-12 text-primary" />
             </div>
 
-            <span className="inline-block px-3.5 py-1 bg-mint text-primary-dark font-semibold text-xs rounded-full uppercase tracking-wider mb-2">
-              Enquiry Received
+            <span className="inline-block px-4 py-1.5 bg-mint text-primary-dark font-extrabold text-xs rounded-full uppercase tracking-wider mb-3">
+              Enquiry Logged Successfully
             </span>
 
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-charcoal mb-2">
+            <h3 className="text-2xl sm:text-3xl font-black text-charcoal mb-2">
               Thank You, {submissionSuccess.enquiry.fullName}!
             </h3>
 
-            <p className="text-sm text-charcoal-light mb-6">
-              Your cleaning enquiry has been successfully logged. Our coordinator
-              will review your requirements and provide your transparent quote.
+            <p className="text-sm text-charcoal-muted mb-8 leading-relaxed">
+              Your cleaning enquiry has been registered. Our team coordinator will review your requirements and provide your transparent quote.
             </p>
 
             {/* Reference Card */}
-            <div className="bg-surface-subtle border border-surface-border rounded-2xl p-5 mb-6 text-left space-y-3">
+            <div className="bg-surface-subtle border border-gray-200/80 rounded-2xl p-6 mb-6 text-left space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                <span className="text-xs font-semibold text-charcoal-muted uppercase tracking-wider">
-                  Reference ID
+                <span className="text-xs font-bold text-charcoal-muted uppercase tracking-wider">
+                  Booking Reference ID
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-primary text-base">
+                  <span className="font-mono font-black text-primary text-lg">
                     {submissionSuccess.bookingId}
                   </span>
                   <button
                     onClick={copyBookingId}
                     type="button"
-                    className="p-1 text-gray-500 hover:text-primary transition-colors"
+                    className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-primary transition-colors"
                     title="Copy Reference ID"
                   >
                     <Copy className="w-4 h-4" />
                   </button>
                   {copied && (
-                    <span className="text-xs text-emerald-600 font-semibold">
+                    <span className="text-xs text-emerald-600 font-bold">
                       Copied!
                     </span>
                   )}
@@ -213,47 +242,46 @@ export default function EnquiryForm({
 
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="text-charcoal-muted block">Service</span>
-                  <span className="font-medium text-charcoal">
+                  <span className="text-charcoal-muted block font-medium">Service</span>
+                  <span className="font-bold text-charcoal">
                     {submissionSuccess.enquiry.serviceRequired}
                   </span>
                 </div>
                 <div>
-                  <span className="text-charcoal-muted block">Home Size</span>
-                  <span className="font-medium text-charcoal">
+                  <span className="text-charcoal-muted block font-medium">Home Size</span>
+                  <span className="font-bold text-charcoal">
                     {submissionSuccess.enquiry.homeSize}
                   </span>
                 </div>
                 <div>
-                  <span className="text-charcoal-muted block">Location</span>
-                  <span className="font-medium text-charcoal">
+                  <span className="text-charcoal-muted block font-medium">Location</span>
+                  <span className="font-bold text-charcoal">
                     {submissionSuccess.enquiry.locationArea}
                   </span>
                 </div>
                 <div>
-                  <span className="text-charcoal-muted block">Preferred Date</span>
-                  <span className="font-medium text-charcoal">
+                  <span className="text-charcoal-muted block font-medium">Preferred Date</span>
+                  <span className="font-bold text-charcoal">
                     {submissionSuccess.enquiry.preferredDate || "Earliest available"}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-primary/5 border border-primary/15 rounded-xl p-4 text-xs text-charcoal mb-6 text-left flex items-start gap-3">
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-xs text-charcoal mb-8 text-left flex items-start gap-3">
               <Clock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold text-primary block mb-0.5">
+                <span className="font-black text-primary block mb-0.5">
                   24/7 Response Assurance:
                 </span>
-                We are open 24 hours. Because you are based in or around
-                Bangalore, our team reviews details promptly to discuss customized scope and confirm timing.
+                We are open 24 hours. Because you are based in or around Bangalore, our team reviews details promptly to discuss customized scope and confirm timing.
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={resetForm}
-                className="px-6 py-2.5 rounded-xl text-sm font-semibold border border-gray-300 hover:bg-gray-50 text-charcoal transition-colors"
+                className="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider border border-gray-300 hover:bg-gray-50 text-charcoal transition-colors"
               >
                 Submit Another Enquiry
               </button>
@@ -261,22 +289,22 @@ export default function EnquiryForm({
                 href={BUSINESS_INFO.mapsDirectionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-2.5 rounded-xl text-sm font-semibold bg-primary hover:bg-primary-hover text-white transition-colors flex items-center justify-center gap-1.5"
+                className="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider bg-primary hover:bg-primary-hover text-white transition-all shadow-md flex items-center justify-center gap-2"
               >
                 <MapPin className="w-4 h-4 text-accent" />
-                View Our Bangalore Location
+                <span>View Bangalore Location</span>
               </a>
             </div>
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-premium border border-surface-border">
+        <div className="bg-white rounded-[32px] p-6 sm:p-10 lg:p-12 shadow-premium-hover border border-gray-200/90 relative overflow-hidden">
           <div className="mb-8">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-mint text-primary-dark font-semibold text-xs rounded-full uppercase tracking-wider mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-mint text-primary-dark font-extrabold text-xs rounded-full uppercase tracking-wider mb-3">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
               Direct Quote Request
             </span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-charcoal tracking-tight">
+            <h3 className="text-2xl sm:text-4xl font-black text-charcoal tracking-tight">
               {title}
             </h3>
             <p className="text-sm text-charcoal-muted mt-2 leading-relaxed">
@@ -285,17 +313,20 @@ export default function EnquiryForm({
           </div>
 
           {errors.form && (
-            <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2.5">
+            <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm flex items-start gap-2.5">
               <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
               <span>{errors.form}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Full Name */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal mb-2">
+                <span className="block text-[11px] font-bold text-charcoal-light uppercase tracking-wider mb-1">
+                  Format: First &amp; Last Name
+                </span>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-charcoal mb-2">
                   Full Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -303,23 +334,32 @@ export default function EnquiryForm({
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
+                  onBlur={() => handleBlur("fullName")}
                   placeholder="e.g. Priya Sharma"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
-                    errors.fullName ? "border-red-400 bg-red-50/30" : "border-gray-200 bg-surface-subtle"
+                  className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
+                    touched.fullName && errors.fullName 
+                      ? "border-red-400 bg-red-50/30" 
+                      : "border-gray-200 bg-surface-subtle focus:bg-white"
                   }`}
                 />
-                {errors.fullName && (
-                  <p className="text-xs text-red-500 mt-1">{errors.fullName}</p>
+                {touched.fullName && errors.fullName && (
+                  <p className="text-xs text-red-500 mt-1.5 font-medium flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {errors.fullName}
+                  </p>
                 )}
               </div>
 
               {/* Mobile Number */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal mb-2">
+                <span className="block text-[11px] font-bold text-charcoal-light uppercase tracking-wider mb-1">
+                  Format: 10-digit Indian Mobile
+                </span>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-charcoal mb-2">
                   Mobile Number <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-500">
                     +91
                   </span>
                   <input
@@ -327,15 +367,21 @@ export default function EnquiryForm({
                     name="mobileNumber"
                     value={formData.mobileNumber}
                     onChange={handleChange}
+                    onBlur={() => handleBlur("mobileNumber")}
                     maxLength={10}
                     placeholder="9876543210"
-                    className={`w-full pl-14 pr-4 py-3 rounded-xl border text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
-                      errors.mobileNumber ? "border-red-400 bg-red-50/30" : "border-gray-200 bg-surface-subtle"
+                    className={`w-full pl-14 pr-4 py-3.5 rounded-2xl border text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
+                      touched.mobileNumber && errors.mobileNumber 
+                        ? "border-red-400 bg-red-50/30" 
+                        : "border-gray-200 bg-surface-subtle focus:bg-white"
                     }`}
                   />
                 </div>
-                {errors.mobileNumber && (
-                  <p className="text-xs text-red-500 mt-1">{errors.mobileNumber}</p>
+                {touched.mobileNumber && errors.mobileNumber && (
+                  <p className="text-xs text-red-500 mt-1.5 font-medium flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {errors.mobileNumber}
+                  </p>
                 )}
               </div>
             </div>
@@ -343,14 +389,14 @@ export default function EnquiryForm({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Service Required */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal mb-2">
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-charcoal mb-2">
                   Service Required <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="serviceRequired"
                   value={formData.serviceRequired}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-surface-subtle text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 bg-surface-subtle text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 >
                   {SERVICES.map((s) => (
                     <option key={s.id} value={s.name}>
@@ -358,23 +404,18 @@ export default function EnquiryForm({
                     </option>
                   ))}
                 </select>
-                {errors.serviceRequired && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.serviceRequired}
-                  </p>
-                )}
               </div>
 
               {/* Home Size (Optional) */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal mb-2">
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-charcoal mb-2">
                   Home Size <span className="text-gray-400 font-normal">(Optional)</span>
                 </label>
                 <select
                   name="homeSize"
                   value={formData.homeSize}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-surface-subtle text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 bg-surface-subtle text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 >
                   <option value="1 BHK Apartment">1 BHK Apartment</option>
                   <option value="2 BHK Apartment">2 BHK Apartment</option>
@@ -391,33 +432,29 @@ export default function EnquiryForm({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Preferred Date */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal mb-2">
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-charcoal mb-2">
                   Preferred Date
                 </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    name="preferredDate"
-                    min={todayStr}
-                    value={formData.preferredDate}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-surface-subtle text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                  />
-                </div>
+                <input
+                  type="date"
+                  name="preferredDate"
+                  min={todayStr}
+                  value={formData.preferredDate}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 bg-surface-subtle text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                />
               </div>
 
               {/* Location / Area */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal mb-2">
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-charcoal mb-2">
                   Location / Area in Bangalore <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="locationArea"
                   value={formData.locationArea}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 rounded-xl border text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
-                    errors.locationArea ? "border-red-400 bg-red-50/30" : "border-gray-200 bg-surface-subtle"
-                  }`}
+                  className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 bg-surface-subtle text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 >
                   <option value="Bellandur (Near Mantri Espana)">
                     Bellandur (Near Mantri Espana)
@@ -429,15 +466,12 @@ export default function EnquiryForm({
                   ))}
                   <option value="Other Area in Bangalore">Other Area in Bangalore</option>
                 </select>
-                {errors.locationArea && (
-                  <p className="text-xs text-red-500 mt-1">{errors.locationArea}</p>
-                )}
               </div>
             </div>
 
             {/* Additional Requirements */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-charcoal mb-2">
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-charcoal mb-2">
                 Additional Requirements / Specific Areas to Focus
               </label>
               <textarea
@@ -446,21 +480,21 @@ export default function EnquiryForm({
                 value={formData.additionalRequirements}
                 onChange={handleChange}
                 placeholder="e.g. Heavy dust on balcony grills, hard water marks in master bathroom, kitchen chimney grease..."
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-surface-subtle text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 bg-surface-subtle text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
               />
             </div>
 
             {/* Privacy note */}
-            <p className="text-xs text-charcoal-light flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              We respect your privacy. Your details are used strictly to coordinate your cleaning quotation.
+            <p className="text-xs text-charcoal-light flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>We respect your privacy. Your details are used strictly to coordinate your cleaning quotation.</span>
             </p>
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-primary hover:bg-primary-hover disabled:opacity-75 text-white font-bold py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group text-sm sm:text-base cursor-pointer"
+              className="w-full bg-gradient-to-r from-primary to-primary-hover hover:from-primary-dark hover:to-primary disabled:opacity-75 text-white font-extrabold text-sm sm:text-base py-4 px-8 rounded-2xl shadow-lg hover:shadow-premium-hover transition-all flex items-center justify-center gap-2 group cursor-pointer"
             >
               {isSubmitting ? (
                 <>

@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import MobileQuickBar from "@/components/MobileQuickBar";
 import { BUSINESS_INFO } from "@/data/businessData";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -197,7 +198,9 @@ export default function RootLayout({
         <Navbar />
         <main className="flex-grow">{children}</main>
         <Footer />
+        <MobileQuickBar />
       </body>
     </html>
   );
 }
+

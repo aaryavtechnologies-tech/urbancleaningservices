@@ -249,3 +249,4 @@ export default function ServiceDetailPage({ params }: Props) {
     </div>
   );
 }
+
